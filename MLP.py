@@ -41,11 +41,12 @@ class MLP(nn.Module):
         self.flatten = nn.Flatten() # For flattening the 2D image
 
         # (input layer no., output layer)
-        self.fc1 = nn.Linear(28*28, 512)  # Input is image with shape (28x28)
+        self.fc1 = nn.Linear(32*32, 512)  # Input is image with shape (28x28)
         self.fc2 = nn.Linear(512, 256)  # First HL hidden layer
         self.fc3= nn.Linear(256, 10) # Second HL hidden layer
         self.output = nn.LogSoftmax(dim=1)
 
+    # override the forward method and implement the logic of MLP
     def forward(self, x):
       # Batch x of shape (B, C, W, H)
       x = self.flatten(x) # Batch now has shape (B, C*W*H)
@@ -54,5 +55,16 @@ class MLP(nn.Module):
       x = self.fc3(x)  # Output Layer
       x = self.output(x)  # For multi-class classification
       return x  # Has shape (B, 10)
+
+# outside of MLP class
+# send all the parameters or output to the right place, this code checks which device you have
+# Identify device
+device = ("cuda" if torch.cuda.is_available()
+    else "mps" if torch.backends.mps.is_available()
+    else "cpu"
+)
+
+# Create the model and send its parameters to the appropriate device
+mlp = MLP().to(device) #multi layer perceptron
 
 
