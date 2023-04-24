@@ -5,6 +5,10 @@ import torchvision.transforms as transforms  # Subpackage that contains image tr
 import torch.nn as nn  # Layers
 import torch.nn.functional as F # Activation Functions
 
+import torch.optim as optim # Optimizers
+
+
+
 # Create the transform sequence
 # container that contains a sequence of transform sequence
 # transforms the image to tensors
@@ -25,6 +29,27 @@ trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True
 # Test
 testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
 
+
+# Define the training and testing functions
+def train(net, train_loader, criterion, optimizer, device):
+    net.train()  # Set model to training mode.
+    running_loss = 0.0  # To calculate loss across the batches
+    for data in train_loader:
+        inputs, labels = data  # Get input and labels for batch
+        inputs, labels = inputs.to(device), labels.to(device)  # Send to device
+        #everytime you want to start a new batch set gradient to zero
+        optimizer.zero_grad()  # Zero out the gradients of the ntwork i.e. reset
+        #next for lines are very important
+        outputs = net(inputs)  # Get predictions
+        loss = criterion(outputs, labels)  # Calculate loss
+        loss.backward()  # Propagate loss backwards
+        optimizer.step()  # Update weights
+        running_loss += loss.item()  # Update loss
+    return running_loss / len(train_loader)
+
+
+
+
 # the batch size you want to train on at a time
 # Send data to the data loaders
 BATCH_SIZE = 128
@@ -32,6 +57,13 @@ train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuf
 
 test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False)
 
+# outside of MLP class
+# send all the parameters or output to the right place, this code checks which device you have
+# Identify device
+device = ("cuda" if torch.cuda.is_available()
+    else "mps" if torch.backends.mps.is_available()
+    else "cpu"
+)
 
 # Define the MLP architecture
 class MLP(nn.Module):
@@ -55,14 +87,6 @@ class MLP(nn.Module):
       x = self.fc3(x)  # Output Layer
       x = self.output(x)  # For multi-class classification
       return x  # Has shape (B, 10)
-
-# outside of MLP class
-# send all the parameters or output to the right place, this code checks which device you have
-# Identify device
-device = ("cuda" if torch.cuda.is_available()
-    else "mps" if torch.backends.mps.is_available()
-    else "cpu"
-)
 
 # Create the model and send its parameters to the appropriate device
 mlp = MLP().to(device) #multi layer perceptron
