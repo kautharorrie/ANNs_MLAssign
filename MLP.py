@@ -48,7 +48,19 @@ def train(net, train_loader, criterion, optimizer, device):
     return running_loss / len(train_loader)
 
 
-
+def test(net, test_loader, device):
+    net.eval()  # We are in evaluation mode
+    correct = 0
+    total = 0
+    with torch.no_grad():  # Don't accumulate gradients
+        for data in test_loader:
+            inputs, labels = data
+            inputs, labels = inputs.to(device), labels.to(device) # Send to device
+            outputs = net(inputs)  # Get predictions
+            _, predicted = torch.max(outputs.data, 1)  # Get max value
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()  # How many are correct?
+    return correct / total
 
 # the batch size you want to train on at a time
 # Send data to the data loaders
@@ -90,5 +102,19 @@ class MLP(nn.Module):
 
 # Create the model and send its parameters to the appropriate device
 mlp = MLP().to(device) #multi layer perceptron
+
+# you can change the learning rate to get better accuracy
+LEARNING_RATE = 1e-4
+MOMENTUM = 0.9
+
+# Define the loss function, optimizer, and learning rate scheduler
+criterion = nn.NLLLoss()
+optimizer = optim.SGD(mlp.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+
+# Train the MLP for 5 epochs
+for epoch in range(5):
+    train_loss = train(mlp, train_loader, criterion, optimizer, device)
+    test_acc = test(mlp, test_loader, device)
+    print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
 
 
