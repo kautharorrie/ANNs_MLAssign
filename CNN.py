@@ -111,20 +111,20 @@ class CNN(nn.Module):
       x = self.fc3(x)  # Shape: (B, 10) #send to the output layer
       return x  
 
-# cnn = CNN().to(device)
+cnn = CNN().to(device)
 
-# LEARNING_RATE = 1e-1
-# MOMENTUM = 0.9
+LEARNING_RATE = 1e-1
+MOMENTUM = 0.9
 
-# # Define the loss function, optimizer, and learning rate scheduler
-# criterion = nn.CrossEntropyLoss() # Use this if not using softmax layer
-# optimizer = optim.SGD(cnn.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
+# Define the loss function, optimizer, and learning rate scheduler
+criterion = nn.CrossEntropyLoss() # Use this if not using softmax layer
+optimizer = optim.SGD(cnn.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
-# # Train the MLP for 5 epochs
-# for epoch in range(5):
-#     train_loss = train(cnn, train_loader, criterion, optimizer, device)
-#     test_acc = test(cnn, test_loader, device)
-#     print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
+# Train the MLP for 5 epochs
+for epoch in range(5):
+    train_loss = train(cnn, train_loader, criterion, optimizer, device)
+    test_acc = test(cnn, test_loader, device)
+    print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
 
-#     #overfitting is detected when the train loss is decreasing but the accuracy is becoming worse
-#     #apply the softmax to get the probabliity
+    #overfitting is detected when the train loss is decreasing but the accuracy is becoming worse
+    #apply the softmax to get the probabliity
