@@ -60,19 +60,19 @@ def train(net, train_loader, criterion, optimizer, device):
         running_loss += loss.item()  # Update loss
     return running_loss / len(train_loader)
 
-# def test(net, test_loader, device):
-#     net.eval()  # We are in evaluation mode
-#     correct = 0
-#     total = 0
-#     with torch.no_grad():  # Don't accumulate gradients
-#         for data in test_loader:
-#             inputs, labels = data
-#             inputs, labels = inputs.to(device), labels.to(device) # Send to device
-#             outputs = net(inputs)  # Get predictions
-#             _, predicted = torch.max(outputs.data, 1)  # Get max value
-#             total += labels.size(0)
-#             correct += (predicted == labels).sum().item()  # How many are correct?
-#     return correct / total
+def test(net, test_loader, device):
+    net.eval()  # We are in evaluation mode
+    correct = 0
+    total = 0
+    with torch.no_grad():  # Don't accumulate gradients
+        for data in test_loader:
+            inputs, labels = data
+            inputs, labels = inputs.to(device), labels.to(device) # Send to device
+            outputs = net(inputs)  # Get predictions
+            _, predicted = torch.max(outputs.data, 1)  # Get max value
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()  # How many are correct?
+    return correct / total
 
 # # Define the CNN architecture
 # class CNN(nn.Module):
