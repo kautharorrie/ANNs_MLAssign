@@ -45,20 +45,20 @@ device = ("cuda" if torch.cuda.is_available()
     else "cpu"
 )
 
-# # Define the training and testing functions
-# def train(net, train_loader, criterion, optimizer, device):
-#     net.train()  # Set model to training mode.
-#     running_loss = 0.0  # To calculate loss across the batches
-#     for data in train_loader:
-#         inputs, labels = data  # Get input and labels for batch
-#         inputs, labels = inputs.to(device), labels.to(device)  # Send to device
-#         optimizer.zero_grad()  # Zero out the gradients of the ntwork i.e. reset
-#         outputs = net(inputs)  # Get predictions
-#         loss = criterion(outputs, labels)  # Calculate loss
-#         loss.backward()  # Propagate loss backwards
-#         optimizer.step()  # Update weights
-#         running_loss += loss.item()  # Update loss
-#     return running_loss / len(train_loader)
+# Define the training and testing functions
+def train(net, train_loader, criterion, optimizer, device):
+    net.train()  # Set model to training mode.
+    running_loss = 0.0  # To calculate loss across the batches
+    for data in train_loader:
+        inputs, labels = data  # Get input and labels for batch
+        inputs, labels = inputs.to(device), labels.to(device)  # Send to device
+        optimizer.zero_grad()  # Zero out the gradients of the ntwork i.e. reset
+        outputs = net(inputs)  # Get predictions
+        loss = criterion(outputs, labels)  # Calculate loss
+        loss.backward()  # Propagate loss backwards
+        optimizer.step()  # Update weights
+        running_loss += loss.item()  # Update loss
+    return running_loss / len(train_loader)
 
 # def test(net, test_loader, device):
 #     net.eval()  # We are in evaluation mode
