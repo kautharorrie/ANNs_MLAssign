@@ -74,27 +74,27 @@ def test(net, test_loader, device):
             correct += (predicted == labels).sum().item()  # How many are correct?
     return correct / total
 
-# # Define the CNN architecture
-# class CNN(nn.Module):
-#     def __init__(self):
-#         super(CNN, self).__init__()
-#         # for assign, we need to set first param to 3 (3 colour channels)
-#         # check documentation
-#         #padding - adds a black border around the image
-#         self.conv1 = nn.Conv2d(1, 5, 3, padding=1) # First Conv Layer
-#         self.pool = nn.MaxPool2d(2)  # For pooling
-#         self.flatten = nn.Flatten() # For flattening the 2D image
-#         self.fc1 = nn.Linear(980, 256)  # First FC HL
-#         self.fc2= nn.Linear(256, 10) # Output layer
-#   #forward pass
-#     def forward(self, x):
-#       # Batch x of shape (B, C, W, H)
-#       x = F.relu(self.conv1(x)) # Shape: (B, 5, 28, 28)
-#       x = self.pool(x)  # Shape: (B, 5, 14, 14)
-#       x = self.flatten(x) # Shape: (B, 980)
-#       x = F.relu(self.fc1(x))  # Shape (B, 256)
-#       x = self.fc2(x)  # Shape: (B, 10) #send to the output layer
-#       return x  
+# Define the CNN architecture
+class CNN(nn.Module):
+    def __init__(self):
+        super(CNN, self).__init__()
+        # for assign, we need to set first param to 3 (3 colour channels)
+        # check documentation
+        #padding - adds a black border around the image
+        self.conv1 = nn.Conv2d(1, 5, 3, padding=1) # First Conv Layer
+        self.pool = nn.MaxPool2d(2)  # For pooling
+        self.flatten = nn.Flatten() # For flattening the 2D image
+        self.fc1 = nn.Linear(980, 256)  # First FC HL
+        self.fc2= nn.Linear(256, 10) # Output layer
+  #forward pass
+    def forward(self, x):
+      # Batch x of shape (B, C, W, H)
+      x = F.relu(self.conv1(x)) # Shape: (B, 5, 28, 28)
+      x = self.pool(x)  # Shape: (B, 5, 14, 14)
+      x = self.flatten(x) # Shape: (B, 980)
+      x = F.relu(self.fc1(x))  # Shape (B, 256)
+      x = self.fc2(x)  # Shape: (B, 10) #send to the output layer
+      return x  
 
 # cnn = CNN().to(device)
 
