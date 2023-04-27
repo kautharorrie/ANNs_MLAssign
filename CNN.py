@@ -32,7 +32,7 @@ testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True
 
 # the batch size you want to train on at a time
 # Send data to the data loaders
-BATCH_SIZE = 2
+BATCH_SIZE = 500
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
 
 test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False)
@@ -90,24 +90,32 @@ class CNN(nn.Module):
         # for assign, we need to set first param to 3 (3 colour channels)
         # check documentation
         #padding - adds a black border around the image
-        self.conv1 = nn.Conv2d(3, 6, 3, padding=1) # First Conv Layer
+        self.conv1 = nn.Conv2d(3, 6, 2, padding=0) # First Conv Layer
         self.pool1 = nn.MaxPool2d(2)  # For pooling
-        self.conv2 = nn.Conv2d(6, 16, 3, padding=1) # First Conv Layer
+        self.conv2 = nn.Conv2d(6, 16, 3, padding=0) # First Conv Layer
         self.pool2 = nn.MaxPool2d(2)  # For pooling
+        self.bn1 = nn.BatchNorm2d(6)
         self.flatten = nn.Flatten() # For flattening the 2D image
+        # 1176
+        self.fc = nn.Linear(576, 400)  # First FC HL
         self.fc1 = nn.Linear(400, 120)  # First FC HL
         self.fc2= nn.Linear(120, 84) # Hidden
+        self.drop1 = nn.Dropout(p=0.2) #find a lower p 
         self.fc3= nn.Linear(84, 10) # Output layer
   #forward pass
     def forward(self, x):
       # Batch x of shape (B, C, W, H)
       x = F.relu(self.conv1(x)) # Shape: (B, 5, 28, 28)
       x = self.pool1(x)  # Shape: (B, 5, 14, 14)
+      x = self.bn1(x)
       x = F.relu(self.conv2(x)) # Shape: (B, 5, 28, 28)
       x = self.pool2(x)  # Shape: (B, 5, 14, 14)
       x = self.flatten(x) # Shape: (B, 980)
+      x = F.relu(self.fc(x))  # Shape (B, 256)
+      x = self.drop1(x)
       x = F.relu(self.fc1(x))  # Shape (B, 256)
       x = F.relu(self.fc2(x))  # Shape (B, 256)
+      
       x = self.fc3(x)  # Shape: (B, 10) #send to the output layer
       return x  
 
@@ -120,10 +128,12 @@ MOMENTUM = 0.9
 criterion = nn.CrossEntropyLoss() # Use this if not using softmax layer
 optimizer = optim.SGD(cnn.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
+lr_decay = optim.lr_scheduler.StepLR(optimizer, 6, 0.1)
 # Train the MLP for 5 epochs
-for epoch in range(5):
+for epoch in range(15):
     train_loss = train(cnn, train_loader, criterion, optimizer, device)
     test_acc = test(cnn, test_loader, device)
+    lr_decay.step()
     print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
 
     #overfitting is detected when the train loss is decreasing but the accuracy is becoming worse
