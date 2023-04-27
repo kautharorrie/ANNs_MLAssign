@@ -74,6 +74,15 @@ def test(net, test_loader, device):
             correct += (predicted == labels).sum().item()  # How many are correct?
     return correct / total
 
+# 1. A convolutional layer with a filter size of (5x5) and 6 output channels. You will need
+# to determine the number of input channels based on shape of your data.
+# 2. A MaxPool subsampling layer with filter size of (2x2) and a stride of 2.
+# 3. Another convolutional layer with a filter size of (5x5), 6 input channels and 16 output
+# channels.
+# 4. A MaxPool subsampling layer with filter size of (2x2) and a stride of 2.
+# 5. A fully-connected layer with shape (400, 120).
+# 6. A fully-connected layer with shape (120, 84).
+# 7. A fully-connected layer with shape (84, 10
 # Define the CNN architecture
 class CNN(nn.Module):
     def __init__(self):
@@ -81,19 +90,25 @@ class CNN(nn.Module):
         # for assign, we need to set first param to 3 (3 colour channels)
         # check documentation
         #padding - adds a black border around the image
-        self.conv1 = nn.Conv2d(1, 5, 3, padding=1) # First Conv Layer
-        self.pool = nn.MaxPool2d(2)  # For pooling
+        self.conv1 = nn.Conv2d(3, 6, 3, padding=1) # First Conv Layer
+        self.pool1 = nn.MaxPool2d(2)  # For pooling
+        self.conv2 = nn.Conv2d(6, 16, 3, padding=1) # First Conv Layer
+        self.pool2 = nn.MaxPool2d(2)  # For pooling
         self.flatten = nn.Flatten() # For flattening the 2D image
-        self.fc1 = nn.Linear(980, 256)  # First FC HL
-        self.fc2= nn.Linear(256, 10) # Output layer
+        self.fc1 = nn.Linear(400, 120)  # First FC HL
+        self.fc2= nn.Linear(120, 84) # Hidden
+        self.fc3= nn.Linear(84, 10) # Output layer
   #forward pass
     def forward(self, x):
       # Batch x of shape (B, C, W, H)
       x = F.relu(self.conv1(x)) # Shape: (B, 5, 28, 28)
-      x = self.pool(x)  # Shape: (B, 5, 14, 14)
+      x = self.pool1(x)  # Shape: (B, 5, 14, 14)
+      x = F.relu(self.conv2(x)) # Shape: (B, 5, 28, 28)
+      x = self.pool2(x)  # Shape: (B, 5, 14, 14)
       x = self.flatten(x) # Shape: (B, 980)
       x = F.relu(self.fc1(x))  # Shape (B, 256)
-      x = self.fc2(x)  # Shape: (B, 10) #send to the output layer
+      x = F.relu(self.fc2(x))  # Shape (B, 256)
+      x = self.fc3(x)  # Shape: (B, 10) #send to the output layer
       return x  
 
 # cnn = CNN().to(device)
