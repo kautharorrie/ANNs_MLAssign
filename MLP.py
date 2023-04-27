@@ -16,6 +16,7 @@ import torch.optim as optim # Optimizers
 transform = transforms.Compose([
     transforms.ToTensor(),  # Convert to Tensor
     # used 3 values for the CIFAR10 dataset because it is RGB
+    # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)) 
 ])
 #normalise is to change the value of pixel to 1 or -1
@@ -64,7 +65,7 @@ def test(net, test_loader, device):
 
 # the batch size you want to train on at a time
 # Send data to the data loaders
-BATCH_SIZE = 128
+BATCH_SIZE = 2
 train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
 
 test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False)
@@ -85,18 +86,29 @@ class MLP(nn.Module):
         self.flatten = nn.Flatten() # For flattening the 2D image
 
         # (input layer no., output layer)
-        self.fc1 = nn.Linear(32*32, 512)  # Input is image with shape (28x28)
-        self.fc2 = nn.Linear(512, 256)  # First HL hidden layer
-        self.fc3= nn.Linear(256, 10) # Second HL hidden layer
+        self.fc1 = nn.Linear(32*32*3, 64)  # Input is image with shape (28x28)
+        # 64, 32
+        # 512, 256
+        # self.fc1 = nn.Linear(16 * 5 * 5, 120)  # Input is image with shape (28x28)
+        self.fc2 = nn.Linear(64, 32)  # First HL hidden layer
+        self.fc3= nn.Linear(32, 16) # Second HL hidden layer
+        self.fc4= nn.Linear(16, 10) # Third HL hidden layer
+        self.drop1 = nn.Dropout(p=0.1) #find a lower p 
         self.output = nn.LogSoftmax(dim=1)
 
     # override the forward method and implement the logic of MLP
     def forward(self, x):
       # Batch x of shape (B, C, W, H)
       x = self.flatten(x) # Batch now has shape (B, C*W*H)
-      x = F.relu(self.fc1(x))  # First Hidden Layer
-      x = F.relu(self.fc2(x))  # Second Hidden Layer
-      x = self.fc3(x)  # Output Layer
+      x = F.relu(self.fc1(x))  # Input Layer
+      x = self.drop1(x)
+    #   x = F.relu(self.fc2(x))  # Second Hidden Layer
+    #   x = F.relu(self.fc3(x))
+      x = F.tanh(self.fc2(x))  # Second Hidden Layer
+      x = F.tanh(self.fc3(x))
+    # 
+    # x = self.drop1(x)
+      x = self.fc4(x)  # Output Layer
       x = self.output(x)  # For multi-class classification
       return x  # Has shape (B, 10)
 
@@ -109,12 +121,16 @@ MOMENTUM = 0.9
 
 # Define the loss function, optimizer, and learning rate scheduler
 criterion = nn.NLLLoss()
+
+# criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(mlp.parameters(), lr=LEARNING_RATE, momentum=MOMENTUM)
 
+lr_decay = optim.lr_scheduler.StepLR(optimizer, 6, 0.1)
 # Train the MLP for 5 epochs
-for epoch in range(5):
+for epoch in range(15):
     train_loss = train(mlp, train_loader, criterion, optimizer, device)
     test_acc = test(mlp, test_loader, device)
+    lr_decay.step()
     print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
 
 
