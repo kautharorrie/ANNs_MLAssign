@@ -37,13 +37,13 @@ train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuf
 
 test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False)
 
-# # outside of MLP class
-# # send all the parameters or output to the right place, this code checks which device you have
-# # Identify device
-# device = ("cuda" if torch.cuda.is_available()
-#     else "mps" if torch.backends.mps.is_available()
-#     else "cpu"
-# )
+# outside of MLP class
+# send all the parameters or output to the right place, this code checks which device you have
+# Identify device
+device = ("cuda" if torch.cuda.is_available()
+    else "mps" if torch.backends.mps.is_available()
+    else "cpu"
+)
 
 # # Define the training and testing functions
 # def train(net, train_loader, criterion, optimizer, device):
