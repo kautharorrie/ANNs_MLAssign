@@ -99,7 +99,8 @@ class MLP(nn.Module):
         self.fc1 = nn.Linear(32*32*3, 2048)  # output size of 2048 is 2/3 of the input layer (most optimal param for this dataset to achieve 58% accuracy)
         self.fc2 = nn.Linear(2048, 1024)  # First HL hidden layer
         self.fc3= nn.Linear(1024, 512) # Second HL hidden layer
-        self.fc4= nn.Linear(512, 10) # Output
+        # self.fc4= nn.Linear(512, 256) # Third HL hidden layer
+        self.fc5= nn.Linear(512, 10) # Output
         self.drop1 = nn.Dropout(p=0.1) #find a lower p 
         self.output = nn.LogSoftmax(dim=1)
 
@@ -111,7 +112,8 @@ class MLP(nn.Module):
       x = self.drop1(x) # apply droput at the input layer to increase accuracy of MLP
       x = F.relu(self.fc2(x))  # First Hidden Layer, apply the ReLu activation function on the nodes
       x = F.relu(self.fc3(x)) # Second Hidden Layer, apply the ReLu activation function on the nodes
-      x = self.fc4(x)  # Output Layer
+    #   x = F.relu(self.fc4(x)) # Third Hidden Layer, apply the ReLu activation function on the nodes
+      x = self.fc5(x)  # Output Layer
       x = self.output(x)  # For multi-class classification
       return x  # Has shape (B, 10)
 
@@ -134,7 +136,7 @@ lr_decay = optim.lr_scheduler.StepLR(optimizer, 6, 0.1)
 for epoch in range(15):
     train_loss = train(mlp, train_loader, criterion, optimizer, device)
     test_acc = test(mlp, test_loader, device)
-    lr_decay.step()
-    print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc*100:.4f}%")
+    lr_decay.step() # Apply the learning rate decay after every 6th epoch
+    print(f"Epoch {epoch+1}: Train loss = {train_loss:.4f}, Test accuracy = {test_acc:.4f}")
 
 
