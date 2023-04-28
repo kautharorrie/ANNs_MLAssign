@@ -1,73 +1,48 @@
-import torch  # Main Package
-import torchvision  # Package for Vision Related ML
-import torchvision.transforms as transforms  # Subpackage that contains image transforms
+import torch
+import torch.nn as nn
 
-import torch.nn as nn  # Layers
-import torch.nn.functional as F # Activation Functions
+# better to create a residual block because it will be used reused multiple times
+# this is not the ResNet architecture but rather the residual block that will be implemented every
+class ResBlock(nn.Module):
+    # sample: a conv layer, that might have changed if the input/output layers is changed
+    def __init__(self, input_channels, output_channels, sample=None, stride=1):
+        super(ResBlock, self).__init__()
+        self.expansion = 4 # the output channel will be multiplied by 4 at every  third conv layer
+        # first conv layer
+        self.conv1 = nn.Conv2d(input_channels, output_channels, kernel_size=1, stride=1, padding=0)
+        self.bn1 = nn.BatchNorm2d(output_channels)
+        # second conv layer
+        self.conv2 = nn.Conv2d(output_channels, output_channels, kernel_size=3, stride=stride, padding=1)
+        self.bn2 = nn.BatchNorm2d(output_channels)
+        # at this point we multiply the output channels by 4
+        self.conv3 = nn.Conv2d(input_channels, output_channels*self.expansion, kernel_size=1, stride=1, padding=0)
+        self.bn3 = nn.BatchNorm2d(output_channels*self.expansion)
+        self.relu = nn.ReLU()
+        self.sample = sample
 
-import torch.optim as optim # Optimizers
+    def forward(self, x):
+        identity = x
 
-# Create the transform sequence
-# container that contains a sequence of transform sequence
-# transforms the image to tensors
-# data needs to be transfomed to a tensor
-transform = transforms.Compose([
-    transforms.ToTensor(),  # Convert to Tensor
-    # used 3 values for the CIFAR10 dataset because it is RGB
-    # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)) 
-])
-#normalise is to change the value of pixel to 1 or -1
-#for assignment we can chnage the colours or normalise them with different mean and deviatoion
+        # apply all the defined layers
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x) # apply relu activation function between the conv layers
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.relu(x)
+        x = self.conv3(x)
+        x = self.bn3(x)
 
-# Load CIFAR-10 dataset
-# download the dataset using torch vision
+        # check if the shape needs to be changed
+        # if the sample is not none, we will have to run it through x
+        if self.sample is not None:
+            identity = self.sample(identity)
 
-# Train
-trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform)
-# Test
-testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform)
+        x += identity
+        x = self.relu(x)
+        return x
+    
+# defining the ResNet architecture
 
-# the batch size you want to train on at a time
-# Send data to the data loaders
-BATCH_SIZE = 500
-train_loader = torch.utils.data.DataLoader(trainset, batch_size=BATCH_SIZE, shuffle=True)
 
-test_loader = torch.utils.data.DataLoader(testset, batch_size=BATCH_SIZE, shuffle=False)
 
-# outside of MLP class
-# send all the parameters or output to the right place, this code checks which device you have
-# Identify device
-device = ("cuda" if torch.cuda.is_available()
-    else "mps" if torch.backends.mps.is_available()
-    else "cpu"
-)
-
-# Define the training and testing functions
-def train(net, train_loader, criterion, optimizer, device):
-    net.train()  # Set model to training mode.
-    running_loss = 0.0  # To calculate loss across the batches
-    for data in train_loader:
-        inputs, labels = data  # Get input and labels for batch
-        inputs, labels = inputs.to(device), labels.to(device)  # Send to device
-        optimizer.zero_grad()  # Zero out the gradients of the ntwork i.e. reset
-        outputs = net(inputs)  # Get predictions
-        loss = criterion(outputs, labels)  # Calculate loss
-        loss.backward()  # Propagate loss backwards
-        optimizer.step()  # Update weights
-        running_loss += loss.item()  # Update loss
-    return running_loss / len(train_loader)
-
-def test(net, test_loader, device):
-    net.eval()  # We are in evaluation mode
-    correct = 0
-    total = 0
-    with torch.no_grad():  # Don't accumulate gradients
-        for data in test_loader:
-            inputs, labels = data
-            inputs, labels = inputs.to(device), labels.to(device) # Send to device
-            outputs = net(inputs)  # Get predictions
-            _, predicted = torch.max(outputs.data, 1)  # Get max value
-            total += labels.size(0)
-            correct += (predicted == labels).sum().item()  # How many are correct?
-    return correct / total
